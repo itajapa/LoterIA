@@ -1,20 +1,47 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# LoterIA - Analisador de Loterias com IA
 
-# Run and deploy your AI Studio app
+Este é um aplicativo web desenvolvido por **Paulo Assis** que utiliza o poder da API do Google Gemini para realizar análises estatísticas de resultados históricos de loterias e gerar sugestões de novos jogos com base em padrões identificados.
 
-This contains everything you need to run your app locally.
+## ✨ Funcionalidades
 
-View your app in AI Studio: https://ai.studio/apps/drive/1ibkrxYLpNkQWo2X6DXEOirpbEc6jJNDd
+- **Análise com IA:** Utiliza a inteligência artificial do Google Gemini para processar dezenas de concursos anteriores.
+- **Geração de Jogos:** Cria sugestões de jogos otimizadas com base na análise de frequência, probabilidades e outros padrões.
+- **Histórico de Jogos:** Permite salvar os jogos gerados para conferência futura.
+- **Conferência Automática e Manual:** Simule resultados ou aguarde o app conferir automaticamente seus jogos salvos com os resultados oficiais.
+- **Suporte a Múltiplas Loterias:** Facilmente escalável para incluir diferentes tipos de jogos.
 
-## Run Locally
+## 🚀 Tecnologias Utilizadas
 
-**Prerequisites:**  Node.js
+- **Frontend:** React com TypeScript
+- **Inteligência Artificial:** Google Gemini API (`gemini-2.5-flash`)
+- **Hospedagem:** Netlify
 
+## ⚙️ Como Executar o Projeto Localmente
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+**Pré-requisitos:**
+- [Node.js](https://nodejs.org/) (versão LTS recomendada)
+
+**Passos:**
+
+1.  **Clone o repositório (ou use os arquivos que você já tem):**
+    ```bash
+    git clone https://github.com/itajapa/LoterIA.git
+    cd LoterIA
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
+
+3.  **Inicie o servidor de desenvolvimento:**
+    O aplicativo abrirá em `http://localhost:5173` (ou outra porta disponível).
+    ```bash
+    npm run dev
+    ```
+
+4.  **Para publicar:**
+    Gere a pasta de produção `dist` e faça o deploy em um serviço como Netlify.
+    ```bash
+    npm run build
+    ```
