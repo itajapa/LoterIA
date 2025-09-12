@@ -74,24 +74,76 @@ const Loader = ({ dark = false }) => <div className={`loader ${dark ? 'loader-da
 const AppHeader: React.FC<{
     onNavigateHome: () => void;
     onNavigateToHistory: () => void;
-}> = ({ onNavigateHome, onNavigateToHistory }) => (
+    onShowApiModal: () => void;
+}> = ({ onNavigateHome, onNavigateToHistory, onShowApiModal }) => (
     <header className="app-header persistent-header">
         <h1>Loter<b>IA</b></h1>
         <div className="header-actions">
             <button onClick={onNavigateHome} className="btn-tertiary">INÍCIO</button>
             <button onClick={onNavigateToHistory} className="btn-secondary">HISTÓRICO</button>
+            <button onClick={onShowApiModal} className="btn-tertiary">API</button>
         </div>
     </header>
 );
 
-// FIX: Removed ApiModal component to adhere to API key handling guidelines.
+const ApiModal: React.FC<{
+    apiKey: string;
+    onSave: (key: string) => void;
+    onDelete: () => void;
+    onClose: () => void;
+}> = ({ apiKey, onSave, onDelete, onClose }) => {
+    const [currentKey, setCurrentKey] = useState('');
+
+    const handleSave = () => {
+        if (currentKey.trim()) {
+            onSave(currentKey.trim());
+        }
+    };
+    
+    const maskedKey = apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : '';
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close-btn" onClick={onClose} aria-label="Fechar">&times;</button>
+                <h2>Gerenciar Chave de API do Google</h2>
+                {apiKey ? (
+                    <div className="api-key-display">
+                        <p>Sua chave de API está salva. Ela não fica visível por segurança.</p>
+                        <div className="masked-api-key"><strong>Chave Salva:</strong> {maskedKey}</div>
+                        <button onClick={onDelete} className="btn-delete">Deletar Chave de API</button>
+                    </div>
+                ) : (
+                    <div className="api-key-input-form">
+                        <p>Para usar a funcionalidade de IA, você precisa de uma chave de API do Google Gemini.</p>
+                        <div className="input-group">
+                            <label htmlFor="api-key-input">Sua Chave de API:</label>
+                            <input
+                                id="api-key-input"
+                                type="password"
+                                value={currentKey}
+                                onChange={(e) => setCurrentKey(e.target.value)}
+                                placeholder="Cole sua chave de API aqui"
+                            />
+                        </div>
+                        <div className="action-buttons">
+                           <button onClick={onClose} className="btn-secondary">Cancelar</button>
+                           <button onClick={handleSave} className="btn-primary" disabled={!currentKey.trim()}>Salvar Chave</button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const HelpModal: React.FC<{ onClose: () => void; }> = ({ onClose }) => (
     <div className="modal-overlay" onClick={onClose}>
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={onClose} aria-label="Fechar">&times;</button>
             <h2>Como Usar o Aplicativo</h2>
             <ol>
-                 {/* FIX: Removed API key step from instructions. */}
+                 <li><strong>API:</strong> Primeiro, clique no botão "API" e insira sua chave do Google Gemini para ativar a inteligência artificial.</li>
                  <li><strong>Análise:</strong> Escolha a quantidade de concursos, selecione o jogo e confirme os dados para a IA analisar.</li>
                 <li><strong>Resultados:</strong> Gere sugestões de jogos. Se gostar, clique em <strong>"Salvar Jogos"</strong>.</li>
                 <li><strong>Teimosinha:</strong> Salve um único jogo para ser conferido por vários concursos seguidos.</li>
@@ -166,12 +218,13 @@ const HomePage: React.FC<{
     onStartAnalysis: (g: GameType) => void;
     onNavigateToHistory: () => void;
     onShowHelp: () => void;
+    onShowApiModal: () => void;
     isLoading: boolean;
     loadingGame: GameType | null;
     loadingMessage: string;
     contestsToFetch: number;
     setContestsToFetch: (c: number) => void;
-}> = ({ onStartAnalysis, onNavigateToHistory, onShowHelp, isLoading, loadingGame, loadingMessage, contestsToFetch, setContestsToFetch }) => (
+}> = ({ onStartAnalysis, onNavigateToHistory, onShowHelp, onShowApiModal, isLoading, loadingGame, loadingMessage, contestsToFetch, setContestsToFetch }) => (
     <div className="container">
         <header className="app-header">
             <div>
@@ -182,7 +235,7 @@ const HomePage: React.FC<{
             <div className="header-actions">
                  <button onClick={onShowHelp} className="btn-tertiary">COMO USAR O APP</button>
                  <button onClick={onNavigateToHistory} className="btn-secondary">Histórico de Jogos</button>
-                 {/* FIX: Removed API button. */}
+                 <button onClick={onShowApiModal} className="btn-tertiary">API</button>
             </div>
         </header>
 
@@ -590,6 +643,8 @@ const App: React.FC = () => {
     const [loadingMessage, setLoadingMessage] = useState('');
     const [loadingGame, setLoadingGame] = useState<GameType | null>(null);
     const [showHelp, setShowHelp] = useState(false);
+    const [showApiModal, setShowApiModal] = useState(false);
+    const [apiKey, setApiKey] = useState('');
     const [contestsToFetch, setContestsToFetch] = useState(50);
     const [fetchedResults, setFetchedResults] = useState<FetchedResult[]>([]);
     const [generatedGames, setGeneratedGames] = useState<GameResult>([]);
@@ -599,15 +654,13 @@ const App: React.FC = () => {
     const loadingMessageInterval = useRef<number | null>(null);
     const [teimosinhaModalGame, setTeimosinhaModalGame] = useState<number[] | null>(null);
     
-    // FIX: Removed state for API key management from the UI.
-    // The API key is now handled exclusively via environment variables.
-
-    // FIX: Removed API key loading from localStorage.
-    // Load history from localStorage on initial load
+    // Load data from localStorage on initial load
     useEffect(() => {
         try {
             const savedHistory = localStorage.getItem('lotteryAppHistory');
             if (savedHistory) setHistory(JSON.parse(savedHistory));
+            const savedApiKey = localStorage.getItem('googleApiKey');
+            if (savedApiKey) setApiKey(savedApiKey);
         } catch (error) { console.error("Failed to load data from localStorage", error); }
     }, []);
 
@@ -617,8 +670,17 @@ const App: React.FC = () => {
             localStorage.setItem('lotteryAppHistory', JSON.stringify(newHistory));
         } catch (error) { console.error("Failed to save history to localStorage", error); }
     };
+    
+    const handleSaveApiKey = (key: string) => {
+        setApiKey(key);
+        localStorage.setItem('googleApiKey', key);
+        setShowApiModal(false);
+    };
 
-    // FIX: Removed API Key Handlers (handleSaveApiKey, handleDeleteApiKey).
+    const handleDeleteApiKey = () => {
+        setApiKey('');
+        localStorage.removeItem('googleApiKey');
+    };
 
     // Auto-check official results on app load
     useEffect(() => {
@@ -728,9 +790,9 @@ const App: React.FC = () => {
     };
 
     const handleGenerateGames = async (numGames: number) => {
-        // FIX: API key is now sourced from environment variables.
-        if (!process.env.API_KEY) {
-            alert("A chave de API do Google não está configurada no ambiente. A funcionalidade de IA está desativada.");
+        if (!apiKey) {
+            alert("Por favor, insira sua chave de API do Google no menu 'API' para gerar jogos.");
+            setShowApiModal(true);
             return;
         }
 
@@ -740,8 +802,7 @@ const App: React.FC = () => {
         
         let ai;
         try {
-            // FIX: Initialize GoogleGenAI with the API key from environment variables.
-            ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            ai = new GoogleGenAI({ apiKey: apiKey });
         } catch (error) {
             console.error("Erro ao inicializar a API do Google:", error);
             alert("Ocorreu um erro ao inicializar a IA. A chave de API pode ser inválida ou estar faltando.");
@@ -784,8 +845,7 @@ const App: React.FC = () => {
             } else { throw new Error("Resposta da IA em formato inesperado."); }
         } catch (error) {
             console.error("Error calling Gemini API:", error);
-            // FIX: Updated error message to remove reference to user-managed API key.
-            alert("Ocorreu um erro ao se comunicar com a IA. Verifique sua conexão com a internet e tente novamente.");
+            alert("Ocorreu um erro ao se comunicar com a IA. Verifique sua chave de API e conexão com a internet.");
         } finally { stopLoadingMessages(); }
     };
     
@@ -810,7 +870,6 @@ const App: React.FC = () => {
         const startContest = latestContest + 1;
         const newTeimosinha: SavedTeimosinhaSet = {
             id: crypto.randomUUID(), type: 'teimosinha', gameType,
-            // FIX: Corrected typo from newtoISOString() to new Date().toISOString()
             dateSaved: new Date().toISOString(), startContest,
             numberOfContests: numContests, theGame: teimosinhaModalGame,
             conferenceResults: Array.from({ length: numContests }, (_, i) => ({
@@ -904,7 +963,7 @@ const App: React.FC = () => {
 
         switch (view) {
             case 'home':
-                currentViewComponent = <HomePage onStartAnalysis={handleStartAnalysis} onNavigateToHistory={() => setView('history')} onShowHelp={() => setShowHelp(true)} isLoading={isLoading} loadingGame={loadingGame} loadingMessage={loadingMessage} contestsToFetch={contestsToFetch} setContestsToFetch={setContestsToFetch} />;
+                currentViewComponent = <HomePage onStartAnalysis={handleStartAnalysis} onNavigateToHistory={() => setView('history')} onShowHelp={() => setShowHelp(true)} onShowApiModal={() => setShowApiModal(true)} isLoading={isLoading} loadingGame={loadingGame} loadingMessage={loadingMessage} contestsToFetch={contestsToFetch} setContestsToFetch={setContestsToFetch} />;
                 break;
             case 'confirmation':
                 currentViewComponent = <ConfirmationPage fetchedResults={fetchedResults} onConfirm={handleConfirmAndAnalyze} onBack={() => setView('home')} gameType={gameType} />;
@@ -931,11 +990,11 @@ const App: React.FC = () => {
 
         return (
              <>
-                {view !== 'home' && <div className="container" style={{paddingBottom: 0, boxShadow: 'none', background: 'transparent'}}><AppHeader onNavigateHome={() => setView('home')} onNavigateToHistory={() => setView('history')} /></div>}
+                {view !== 'home' && <div className="container" style={{paddingBottom: 0, boxShadow: 'none', background: 'transparent'}}><AppHeader onNavigateHome={() => setView('home')} onNavigateToHistory={() => setView('history')} onShowApiModal={() => setShowApiModal(true)} /></div>}
                 {currentViewComponent}
                 {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
                 {teimosinhaModalGame && <TeimosinhaModal game={teimosinhaModalGame} gameType={gameType} onSave={handleSaveTeimosinha} onClose={handleCloseTeimosinhaModal} />}
-                {/* FIX: Removed ApiModal rendering. */}
+                {showApiModal && <ApiModal apiKey={apiKey} onSave={handleSaveApiKey} onDelete={handleDeleteApiKey} onClose={() => setShowApiModal(false)} />}
             </>
         )
     };
