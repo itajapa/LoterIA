@@ -282,6 +282,12 @@ const ConfirmationPage: React.FC<{
     <div className="container">
         <h2>Confirme os Dados Coletados</h2>
         <p>Estes são os {fetchedResults.length} últimos resultados da {GAME_CONFIG[gameType].name} encontrados. A IA usará estes dados para a análise.</p>
+        
+        <div className="action-buttons confirmation-actions">
+            <button onClick={onBack} className="btn-secondary">Voltar</button>
+            <button onClick={onConfirm} className="btn-primary">Confirmar e Analisar com IA</button>
+        </div>
+
         <div className="results-table-wrapper">
             <table className="results-table">
                 <thead>
@@ -299,10 +305,6 @@ const ConfirmationPage: React.FC<{
                     ))}
                 </tbody>
             </table>
-        </div>
-        <div className="action-buttons">
-            <button onClick={onBack} className="btn-secondary">Voltar</button>
-            <button onClick={onConfirm} className="btn-primary">Confirmar e Analisar com IA</button>
         </div>
     </div>
 );
@@ -384,8 +386,9 @@ const ResultsPage: React.FC<{
 const HistoryPage: React.FC<{
     history: HistoryItem[];
     onViewDetails: (id: string) => void;
+    onDeleteItem: (id: string) => void;
     onBack: () => void;
-}> = ({ history, onViewDetails, onBack }) => (
+}> = ({ history, onViewDetails, onDeleteItem, onBack }) => (
     <div className="container">
         <h2>Histórico de Jogos</h2>
         {history.length === 0 ? (
@@ -418,7 +421,10 @@ const HistoryPage: React.FC<{
                             <div className="history-item-info">
                                 {details}
                             </div>
-                            <button onClick={() => onViewDetails(item.id)} className="btn-primary">Ver Detalhes</button>
+                            <div className="history-item-actions">
+                                <button onClick={() => onViewDetails(item.id)} className="btn-secondary">Ver Detalhes</button>
+                                <button onClick={() => onDeleteItem(item.id)} className="btn-delete">Excluir</button>
+                            </div>
                         </li>
                     )
                 })}
@@ -893,6 +899,13 @@ const App: React.FC = () => {
         }
     };
 
+    const handleDeleteHistoryItem = (id: string) => {
+        if (window.confirm("Tem certeza que deseja excluir este item do histórico? Esta ação não pode ser desfeita.")) {
+            const newHistory = history.filter(item => item.id !== id);
+            updateHistory(newHistory);
+        }
+    };
+
     const performConference = (gameSet: SavedGameSet, winningNumbers: number[], type: 'manual' | 'official'): SavedGameSet => {
         const summary: Record<number, number> = {};
         gameSet.generatedGames.forEach(game => {
@@ -972,7 +985,7 @@ const App: React.FC = () => {
                 currentViewComponent = <ResultsPage generatedGames={generatedGames} onGenerate={handleGenerateGames} onSave={handleSaveGames} onSaveTeimosinha={() => handleOpenTeimosinhaModal(generatedGames[0])} gameType={gameType} isLoading={isLoading} loadingMessage={loadingMessage} saveMessage={saveMessage} />;
                 break;
             case 'history':
-                currentViewComponent = <HistoryPage history={history} onViewDetails={handleViewDetails} onBack={() => setView('home')} />;
+                currentViewComponent = <HistoryPage history={history} onViewDetails={handleViewDetails} onDeleteItem={handleDeleteHistoryItem} onBack={() => setView('home')} />;
                 break;
             case 'historyDetail': {
                 const gameSet = history.find(g => g.id === currentDetailId && !('type' in g)) as SavedGameSet | undefined;
