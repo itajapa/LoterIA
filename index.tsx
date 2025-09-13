@@ -69,6 +69,8 @@ const App = () => {
     }
   });
   const [viewingGameId, setViewingGameId] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(() => window.localStorage.getItem('loterIA_apiKey'));
+  const [showApiModal, setShowApiModal] = useState(false);
   
   useEffect(() => {
     try {
@@ -77,6 +79,15 @@ const App = () => {
       console.error('Failed to save games to localStorage:', error);
     }
   }, [savedGames]);
+
+  useEffect(() => {
+    if (apiKey) {
+      window.localStorage.setItem('loterIA_apiKey', apiKey);
+    } else {
+      window.localStorage.removeItem('loterIA_apiKey');
+    }
+  }, [apiKey]);
+
 
  const handleSelectGameType = async (gameType: LotteryType, numToAnalyze: number) => {
     setLoadingGame(gameType);
@@ -152,6 +163,7 @@ const App = () => {
                     pastResults={pastResults}
                     selectedGame={selectedGame!}
                     targetContest={targetContest!}
+                    apiKey={apiKey}
                     onSaveGames={(games, isTeimosinha, teimosinhaContests) => {
                         if (!selectedGame || !targetContest) return;
                         const newSavedGame: SavedGame | TeimosinhaSavedGame = {
@@ -195,8 +207,19 @@ const App = () => {
           currentPage={currentPage} 
           resetToHome={resetToHome} 
           onHistory={() => setCurrentPage('history')}
+          onApiClick={() => setShowApiModal(true)}
         />
         {renderPage()}
+        {showApiModal && (
+            <ApiModal
+                currentApiKey={apiKey}
+                onClose={() => setShowApiModal(false)}
+                onSave={(key) => {
+                    setApiKey(key);
+                    setShowApiModal(false);
+                }}
+            />
+        )}
     </div>
   );
 };
@@ -204,7 +227,7 @@ const App = () => {
 
 // --- Sub-components (Pages) ---
 
-const AppHeader = ({ currentPage, resetToHome, onHistory }: { currentPage: string, resetToHome: () => void, onHistory: () => void }) => {
+const AppHeader = ({ currentPage, resetToHome, onHistory, onApiClick }: { currentPage: string, resetToHome: () => void, onHistory: () => void, onApiClick: () => void }) => {
     const isHomePage = currentPage === 'home';
     const headerClass = isHomePage ? "app-header" : "app-header persistent-header";
     
@@ -222,6 +245,7 @@ const AppHeader = ({ currentPage, resetToHome, onHistory }: { currentPage: strin
             <div className="header-actions">
                  {!isHomePage && <button className="btn-tertiary" onClick={resetToHome}>Início</button>}
                  <button className="btn-tertiary" onClick={onHistory}>Histórico</button>
+                 <button className="btn-tertiary" onClick={onApiClick}>API</button>
             </div>
         </header>
     );
@@ -305,11 +329,12 @@ const ConfirmationPage = ({ pastResults, gameType, onConfirm }: {
   )
 }
 
-const GeneratePage = ({ pastResults, selectedGame, targetContest, onSaveGames }: {
+const GeneratePage = ({ pastResults, selectedGame, targetContest, onSaveGames, apiKey }: {
   pastResults: any[],
   selectedGame: LotteryType,
   targetContest: number,
   onSaveGames: (games: Game[], isTeimosinha: boolean, teimosinhaContests?: number) => void,
+  apiKey: string | null;
 }) => {
   const gameOptions = [1, 10, 20, 50, 100, 200];
   const [isGenerating, setIsGenerating] = useState(false);
@@ -328,6 +353,12 @@ const GeneratePage = ({ pastResults, selectedGame, targetContest, onSaveGames }:
     setSavedAsGame(false);
     setSavedAsTeimosinha(false);
 
+    if (!apiKey) {
+        setError("Por favor, configure sua chave de API do Google no botão 'API' do cabeçalho para gerar jogos.");
+        setIsGenerating(false);
+        return;
+    }
+
     const loadingMessages = [
       "Consultando a IA do Google...", "Analisando padrões nos concursos solicitados...", "Verificando dezenas quentes e frias...", "Calculando equilíbrio de pares e ímpares...", "Analisando a soma das dezenas...", "Identificando números repetidos do concurso anterior...", "Analisando distribuição entre moldura e miolo...", "Considerando a presença de números primos e Fibonacci...", "Gerando jogos otimizados com base na sua análise...",
     ];
@@ -340,7 +371,7 @@ const GeneratePage = ({ pastResults, selectedGame, targetContest, onSaveGames }:
     try {
       const config = LOTTERY_CONFIG[selectedGame];
       const pastResultsText = pastResults.map(r => `Concurso ${r.numero}: ${r.listaDezenas.join(', ')}`).join('\n');
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `
         Você é um especialista em Análise Combinatória, Teoria das Probabilidades e Estatística Descritiva, focado em loterias. Sua tarefa é analisar profundamente os dados dos últimos ${pastResults.length} concursos da ${config.name} que estou fornecendo e, com base NESSA ANÁLISE MULTIFATORIAL, gerar ${numberOfGames} jogo(s) com alta probabilidade estatística.
 
@@ -705,13 +736,9 @@ const DetailPage = ({ game, setSavedGames }: { game: SavedGame | TeimosinhaSaved
     const handleRemoveManualCheck = () => {
         setSavedGames(currentGames => {
             const newGames = currentGames.map(g => {
-                // If this is not the game we're looking for, return it as is.
                 if (g.id !== game.id) {
                     return g;
                 }
-                
-                // If it IS the game, create a new object from it,
-                // but explicitly set manualCheck to null.
                 return {
                     ...g,
                     manualCheck: null,
@@ -895,6 +922,41 @@ const TeimosinhaModal = ({ onClose, onSave }: { onClose: () => void, onSave: (co
             <div className="action-buttons">
                 <button className="btn-secondary" onClick={onClose}>Cancelar</button>
                 <button className="btn-primary" onClick={() => onSave(contests)}>Salvar Teimosinha</button>
+            </div>
+        </div>
+      </div>
+    );
+};
+
+const ApiModal = ({ currentApiKey, onClose, onSave }: { currentApiKey: string | null, onClose: () => void, onSave: (key: string) => void }) => {
+    const [key, setKey] = useState(currentApiKey || '');
+
+    const handleSave = () => {
+        if (key.trim()) {
+            onSave(key.trim());
+        }
+    };
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button onClick={onClose} className="modal-close-btn">&times;</button>
+            <h2>Configurar Chave da API do Google</h2>
+            <p>Para que a IA possa analisar e gerar os jogos, você precisa fornecer sua própria chave de API do Google Gemini. Você pode obter uma gratuitamente no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</p>
+            <div className="input-group" style={{ flexDirection: 'column', alignItems: 'flex-start', margin: '1.5rem 0' }}>
+                <label htmlFor="api-key-input" style={{ marginBottom: '0.5rem'}}>Sua Chave de API:</label>
+                <input
+                    type="password"
+                    id="api-key-input"
+                    value={key}
+                    onChange={e => setKey(e.target.value)}
+                    placeholder="Cole sua chave de API aqui"
+                    style={{width: '100%'}}
+                />
+            </div>
+            <div className="action-buttons">
+                <button className="btn-secondary" onClick={onClose}>Cancelar</button>
+                <button className="btn-primary" onClick={handleSave}>Salvar Chave</button>
             </div>
         </div>
       </div>
