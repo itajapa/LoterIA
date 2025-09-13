@@ -294,6 +294,20 @@ input[type="number"]:focus, input[type="password"]:focus, select:focus {
   margin-top: 2rem;
 }
 
+.game-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.draw-days {
+  font-size: 0.8rem;
+  color: var(--text-light-color);
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+
 /* --- Tables --- */
 .results-header-with-actions {
     display: flex;
