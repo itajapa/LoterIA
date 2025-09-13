@@ -198,13 +198,13 @@ button:disabled {
 }
 
 .btn-delete {
-  background-color: var(--error-color);
-  border-color: var(--error-color);
-  color: white;
+  background-color: transparent;
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
 }
 .btn-delete:hover {
-  background-color: color-mix(in srgb, var(--error-color) 85%, black);
-  border-color: color-mix(in srgb, var(--error-color) 85%, black);
+  background-color: var(--error-color);
+  color: white;
 }
 
 .action-buttons {
@@ -270,7 +270,7 @@ label {
   font-weight: 500;
 }
 
-input[type="number"], input[type="password"], select {
+input[type="number"], input[type="password"], input[type="text"], select {
   padding: 0.5rem 0.75rem;
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
@@ -278,7 +278,7 @@ input[type="number"], input[type="password"], select {
   transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
   width: 100%;
 }
-input[type="number"]:focus, input[type="password"]:focus, select:focus {
+input[type="number"]:focus, input[type="password"]:focus, input[type="text"]:focus, select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent);
@@ -385,7 +385,7 @@ input[type="number"]:focus, input[type="password"]:focus, select:focus {
 }
 
 /* --- Loader --- */
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(300deg); } }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .loader {
   border: 4px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
@@ -399,11 +399,19 @@ input[type="number"]:focus, input[type="password"]:focus, select:focus {
   border-top-color: var(--loader-color);
 }
 
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
 .loading-feedback {
   height: 1.5rem;
   line-height: 1.5rem;
   text-align: center;
   color: var(--text-light-color);
+  margin-bottom: 0;
 }
 
 /* --- History Page --- */
@@ -441,18 +449,36 @@ input[type="number"]:focus, input[type="password"]:focus, select:focus {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
 }
-.history-item-info strong { font-size: 1.1rem; }
+.history-item-info strong { 
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
 .history-item-info small { color: var(--text-light-color); }
 .conference-summary {
   font-weight: 500;
   margin-top: 0.5rem;
   color: var(--text-light-color);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
-.conference-summary.official {
+.conference-summary .official {
   color: var(--success-color);
 }
-.conference-summary.manual {
+.conference-summary .manual {
   color: var(--primary-color);
+}
+.winner-tag {
+  background-color: var(--success-color);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
 }
 
 /* --- Detail Pages --- */
@@ -460,8 +486,16 @@ input[type="number"]:focus, input[type="password"]:focus, select:focus {
   background-color: var(--background-color);
   padding: 1.5rem;
   border-radius: var(--border-radius);
+}
+
+.hits-summary {
   margin-top: 2rem;
 }
+
+.manual-check-container {
+  margin-bottom: 2rem;
+}
+
 .manual-inputs {
   display: flex;
   gap: 0.5rem;
@@ -506,8 +540,16 @@ input[type=number] {
   margin-bottom: 1rem;
 }
 .teimosinha-game span { font-weight: 700; letter-spacing: 1px; }
-.status-checked { color: var(--success-color); font-weight: 500; }
-.status-pending { color: var(--text-light-color); }
+
+.teimosinha-details-table td:nth-child(2) {
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+.status-pending { 
+  color: var(--text-light-color); 
+  font-style: italic;
+}
 
 /* --- Modals --- */
 .modal-overlay {
@@ -550,35 +592,52 @@ input[type=number] {
 .modal-content ol { padding-left: 20px; }
 .modal-content li { margin-bottom: 0.5rem; }
 
-/* --- API Modal --- */
-.api-key-display, .api-key-input-form {
-  margin-top: 1.5rem;
-  text-align: center;
-}
-.masked-api-key {
-  background-color: var(--background-color);
-  padding: 0.75rem 1rem;
-  border-radius: var(--border-radius);
-  font-family: monospace;
-  margin: 1rem 0;
-  word-break: break-all;
+/* Confirmation Page Results List */
+.results-list-wrapper {
+  max-height: 350px;
+  overflow-y: auto;
   border: 1px solid var(--border-color);
-}
-.masked-api-key strong {
-    color: var(--text-color);
-}
-.api-key-input-form .input-group {
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-    text-align: left;
-}
-.api-key-input-form .input-group label {
-    margin-bottom: 0.25rem;
-}
-.api-key-input-form input {
-    text-align: left;
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
 }
 
+.results-list {
+  list-style: none;
+  padding: 0;
+}
+
+.results-list li {
+  padding: 0.75rem 0.5rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+.results-list li b {
+  flex-shrink: 0;
+}
+
+.results-list li:not(:last-child) {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.hits-distribution-summary {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: color-mix(in srgb, var(--success-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success-color) 30%, transparent);
+  border-radius: var(--border-radius);
+  color: var(--success-color);
+  font-weight: 500;
+  text-align: center;
+}
+
+.hits-distribution-summary.no-prize {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+    color: var(--text-light-color);
+}
 
 /* --- Responsive Design --- */
 @media (max-width: 768px) {
@@ -599,7 +658,6 @@ input[type=number] {
   .history-item button { width: 100%; }
   .manual-inputs input { width: 40px; height: 40px; }
   .generation-controls { display: flex; flex-direction: column; }
-  .generation-group button { width: 100%; }
 }
 
 /* Success Message */
@@ -607,9 +665,20 @@ input[type=number] {
     text-align: center;
     color: var(--success-color);
     font-weight: bold;
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
+    margin-top: 1rem;
     padding: 0.5rem;
     background-color: color-mix(in srgb, var(--success-color) 15%, transparent);
     border-radius: var(--border-radius);
+}
+
+/* --- Generate Page Buttons --- */
+.generation-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.results-container {
+    animation: fadeIn 0.5s ease-out;
 }
