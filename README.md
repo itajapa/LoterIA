@@ -5,16 +5,16 @@ O projeto foi criado como parte dos meus estudos em tecnologia da informação e
 
 ## ✨ Funcionalidades
 
-- **Análise com IA:** Utiliza a inteligência artificial do Google Gemini para processar dezenas de concursos anteriores.
-- **Geração de Jogos:** Cria sugestões de jogos otimizadas com base na análise de frequência, probabilidades e outros padrões.
-- **Histórico de Jogos:** Permite salvar os jogos gerados para conferência futura.
-- **Conferência Automática e Manual:** Simule resultados ou aguarde o app conferir automaticamente seus jogos salvos com os resultados oficiais.
-- **Suporte a Múltiplas Loterias:** Facilmente escalável para incluir diferentes tipos de jogos.
-
+- **Análise assistida por IA: uso da API Google Gemini para apoiar a interpretação de dados históricos de concursos, com foco educacional.
+- **Geração de jogos baseada em regras: criação de sugestões de jogos a partir de frequência de números, probabilidades simples e regras definidas em código.
+- **Histórico de jogos: armazenamento local dos jogos gerados para conferência futura.
+- **Conferência automática e manual: simulação de resultados ou conferência dos jogos com dados oficiais.
+- **Projeto extensível: estrutura preparada para inclusão de outros tipos de loterias.
 ## 🚀 Tecnologias Utilizadas
 
 - **Frontend:** React com TypeScript
 - **Inteligência Artificial:** Google Gemini API (`gemini-2.5-flash`)
+- **Linguagem: Python (processamento e regras de negócio)
 - **Hospedagem:** Netlify
 
 ## ⚙️ Como Executar o Projeto Localmente
