@@ -1,6 +1,7 @@
 # LoterIA - Analisador de Loterias com IA
 
-Este é um aplicativo web desenvolvido por **Paulo Assis** que utiliza o poder da API do Google Gemini para realizar análises estatísticas de resultados históricos de loterias e gerar sugestões de novos jogos com base em padrões identificados.
+LoterIA é um projeto educacional desenvolvido em Python com o objetivo de praticar análise de dados, lógica de programação e simulações estatísticas aplicadas a jogos de loteria.
+O projeto foi criado como parte dos meus estudos em tecnologia da informação e ciência de dados.
 
 ## ✨ Funcionalidades
 
